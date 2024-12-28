@@ -1,0 +1,112 @@
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Language {
+  id         String     @id @default(uuid())
+  code       String     @unique // e.g., "en", "es", "fr"
+  name       String // e.g., "English", "Spanish", "French"
+  isActive   Boolean    @default(true)
+  articles   Article[]
+  categories Category[]
+  tags       Tag[]
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+
+  @@index([code])
+}
+
+model User {
+  id        String    @id @default(uuid())
+  email     String    @unique
+  username  String    @unique
+  password  String
+  firstName String?
+  lastName  String?
+  role      String    @default("AUTHOR")
+  isActive  Boolean   @default(true)
+  articles  Article[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([email, username])
+}
+
+model Article {
+  id          String                 @id @default(uuid())
+  slug        String                 @unique
+  title       String
+  content     String
+  excerpt     String?
+  status      String                 @default("DRAFT")
+  language    Language               @relation(fields: [languageId], references: [id])
+  languageId  String
+  author      User                   @relation(fields: [authorId], references: [id])
+  authorId    String
+  categories  CategoriesOnArticles[]
+  tags        TagsOnArticles[]
+  createdAt   DateTime               @default(now())
+  updatedAt   DateTime               @updatedAt
+  publishedAt DateTime?
+
+  @@index([slug, languageId])
+  @@index([authorId])
+}
+
+model Category {
+  id          String                 @id @default(uuid())
+  name        String
+  slug        String
+  description String?
+  language    Language               @relation(fields: [languageId], references: [id])
+  languageId  String
+  articles    CategoriesOnArticles[]
+  createdAt   DateTime               @default(now())
+  updatedAt   DateTime               @updatedAt
+
+  @@unique([slug, languageId])
+  @@index([languageId])
+}
+
+model Tag {
+  id         String           @id @default(uuid())
+  name       String
+  slug       String
+  language   Language         @relation(fields: [languageId], references: [id])
+  languageId String
+  articles   TagsOnArticles[]
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+
+  @@unique([slug, languageId])
+  @@index([languageId])
+}
+
+model CategoriesOnArticles {
+  article    Article  @relation(fields: [articleId], references: [id])
+  articleId  String
+  category   Category @relation(fields: [categoryId], references: [id])
+  categoryId String
+  createdAt  DateTime @default(now())
+
+  @@id([articleId, categoryId])
+  @@index([articleId])
+  @@index([categoryId])
+}
+
+model TagsOnArticles {
+  article   Article  @relation(fields: [articleId], references: [id])
+  articleId String
+  tag       Tag      @relation(fields: [tagId], references: [id])
+  tagId     String
+  createdAt DateTime @default(now())
+
+  @@id([articleId, tagId])
+  @@index([articleId])
+  @@index([tagId])
+}
