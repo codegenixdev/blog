@@ -11,3 +11,8 @@ add lang toggle
 auth js
 user avatar
 start adding forms
+
+<!--  -->
+
+continue adding auth
+then multi language
